@@ -1,0 +1,14 @@
+# MongoDB Connection
+MONGO_URL=mongodb+srv://abrahemelgazaly2_db_user:VbMp7GpMkLoXDLcJ@cluster0.pqoakfu.mongodb.net/?appName=Cluster0
+MONGODB_URI=mongodb+srv://abrahemelgazaly2_db_user:VbMp7GpMkLoXDLcJ@cluster0.pqoakfu.mongodb.net/?appName=Cluster0
+
+# JWT Secret for Admin Authentication
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-2024
+
+# Supabase (Legacy - Keep for backward compatibility)
+SUPABASE_PROJECT_ID="yiznsvxwwruenjlwjpzf"
+SUPABASE_PUBLISHABLE_KEY="sb_publishable_QQ6kSdATq82-NpFjTXCShg_9pbSof_d"
+SUPABASE_URL="https://c--925753e6-e40f-49a3-9cc6-d04178b31c4b-prod.lovable.cloud"
+VITE_SUPABASE_PROJECT_ID="yiznsvxwwruenjlwjpzf"
+VITE_SUPABASE_PUBLISHABLE_KEY="sb_publishable_QQ6kSdATq82-NpFjTXCShg_9pbSof_d"
+VITE_SUPABASE_URL="https://c--925753e6-e40f-49a3-9cc6-d04178b31c4b-prod.lovable.cloud"

@@ -1,0 +1,37 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/auth/login",
+      "dest": "/api/auth.js"
+    },
+    {
+      "src": "/api/products",
+      "dest": "/api/products.js"
+    },
+    {
+      "src": "/api/orders",
+      "dest": "/api/orders.js"
+    },
+    {
+      "src": "/api/promo-codes",
+      "dest": "/api/promo-codes.js"
+    },
+    {
+      "src": "/api/newsletter",
+      "dest": "/api/newsletter.js"
+    }
+  ],
+  "env": {
+    "MONGO_URL": "@mongo_url",
+    "JWT_SECRET": "@jwt_secret",
+    "TELEGRAM_BOT_TOKEN": "@telegram_bot_token",
+    "TELEGRAM_CHAT_ID": "@telegram_chat_id"
+  }
+}
