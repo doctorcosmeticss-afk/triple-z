@@ -79,20 +79,17 @@ In Vercel dashboard:
 2. Click "Settings" > "Environment Variables"
 3. Add all the environment variables listed above
 
-### 5. Update Frontend API URLs
-Replace `http://localhost:5000` with your Vercel API URL in:
-- All admin components (OrdersTab, PromoCodesTab, etc.)
-- Newsletter page
-- Checkout process
+### 5. Update Frontend Environment Variable
+Create or update your `.env` file with:
+```bash
+# For production deployment
+VITE_API_URL=https://your-project.vercel.app/api
 
-Example:
-```javascript
-// Before
-const response = await fetch('http://localhost:5000/api/orders', {
-
-// After
-const response = await fetch('https://your-project.vercel.app/api/orders', {
+# The frontend will automatically use localhost:5000 for development if not set
 ```
+
+### 6. Test All Endpoints
+Test your deployed API endpoints to ensure everything works correctly.
 
 ## ✨ Features Included
 
@@ -103,6 +100,7 @@ const response = await fetch('https://your-project.vercel.app/api/orders', {
 - ✅ **Error Handling** - Comprehensive error responses
 - ✅ **Validation** - Input validation for all endpoints
 - ✅ **Mongoose Models** - All schemas included
+- ✅ **Environment Variables** - Frontend uses VITE_API_URL automatically
 
 ## 🔒 Security Features
 
