@@ -1,27 +1,25 @@
-// MongoDB API client
-// - IMPORTANT: Set VITE_API_URL in Vercel Dashboard → Settings → Environment Variables
-//   Value: https://your-project.vercel.app/api
-// - Development: automatically uses localhost:5000 (no config needed)
-const API_URL: string = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
+// API client — uses TanStack Start server routes (/api/*)
+// Works on Vercel (SSR) and locally. No external server needed.
+const API_BASE = '';
 
 export const api = {
   // Products
   async getProducts() {
-    const response = await fetch(`${API_URL}/products`);
+    const response = await fetch(`${API_BASE}/api/products`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to fetch products');
     return data.products;
   },
 
   async getProductBySlug(slug: string) {
-    const response = await fetch(`${API_URL}/products?slug=${slug}`);
+    const response = await fetch(`${API_BASE}/api/products?slug=${slug}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to fetch product');
-    return data.products[0];
+    return data.products?.[0];
   },
 
   async getProductsByCategory(category: string) {
-    const response = await fetch(`${API_URL}/products?category=${category}`);
+    const response = await fetch(`${API_BASE}/api/products?category=${encodeURIComponent(category)}`);
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to fetch products');
     return data.products;
@@ -29,7 +27,7 @@ export const api = {
 
   // Orders
   async createOrder(orderData: any) {
-    const response = await fetch(`${API_URL}/orders`, {
+    const response = await fetch(`${API_BASE}/api/orders`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderData),
@@ -41,7 +39,7 @@ export const api = {
 
   // Promo Codes
   async validatePromoCode(code: string) {
-    const response = await fetch(`${API_URL}/promo-codes?action=validate`, {
+    const response = await fetch(`${API_BASE}/api/promo-codes?action=validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
@@ -52,7 +50,7 @@ export const api = {
   },
 
   async usePromoCode(code: string) {
-    const response = await fetch(`${API_URL}/promo-codes?action=use`, {
+    const response = await fetch(`${API_BASE}/api/promo-codes?action=use`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
@@ -64,7 +62,7 @@ export const api = {
 
   // Newsletter
   async subscribeNewsletter(email: string) {
-    const response = await fetch(`${API_URL}/newsletter`, {
+    const response = await fetch(`${API_BASE}/api/newsletter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),

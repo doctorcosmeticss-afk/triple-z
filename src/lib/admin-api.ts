@@ -1,8 +1,6 @@
-// Admin API client
-// - IMPORTANT: Set VITE_API_URL in Vercel Dashboard → Settings → Environment Variables
-//   Value: https://your-project.vercel.app/api
-// - Development: automatically uses localhost:5000 (no config needed)
-export const ADMIN_API_URL: string = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
+// Admin API client — uses TanStack Start server routes (/api/admin/*)
+// Relative URLs work on both Vercel and local dev
+export const ADMIN_API_URL = '/api/admin';
 
 export function getAuthHeaders() {
   const token = localStorage.getItem('adminToken');
