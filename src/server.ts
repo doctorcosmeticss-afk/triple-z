@@ -48,8 +48,20 @@ export default {
 
       // Handle /api/* routes before passing to TanStack SSR
       if (url.pathname.startsWith("/api/")) {
-        const apiResponse = await handleApiRequest(request);
-        if (apiResponse) return apiResponse;
+        try {
+          const apiResponse = await handleApiRequest(request);
+          if (apiResponse) return apiResponse;
+        } catch (apiError: any) {
+          console.error("API error:", apiError);
+          // Always return JSON for API routes
+          return new Response(
+            JSON.stringify({ error: apiError.message || "Internal server error" }),
+            {
+              status: 500,
+              headers: { "content-type": "application/json" },
+            }
+          );
+        }
       }
 
       const handler = await getServerEntry();

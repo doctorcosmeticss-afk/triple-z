@@ -189,10 +189,8 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             return json({ error: "Missing required fields" }, 400);
           }
           
-          // Remove paymentProof if it's too large (should be handled client-side, but double-check)
-          if (data.paymentProof && data.paymentProof.length > 500000) {
-            return json({ error: "Payment proof image is too large" }, 413);
-          }
+          // Remove paymentProof entirely to avoid 413 errors - will handle separately
+          delete data.paymentProof;
           
           const order = new Order(data);
           await order.save();
