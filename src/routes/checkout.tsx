@@ -76,7 +76,6 @@ function CheckoutPage() {
   const [payerName, setPayerName] = useState("");
   const [payerAccount, setPayerAccount] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
-  const [proof, setProof] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
@@ -156,7 +155,7 @@ function CheckoutPage() {
         payerName: payerName.trim() || null,
         payerAccount: payerAccount.trim() || null,
         transferAmount: transferAmount ? Number(transferAmount) : null,
-        paymentProof: proof ? await fileToBase64(proof) : null,
+        // Remove paymentProof to avoid 413 errors - users will send via WhatsApp
       };
 
       await api.createOrder(orderData);
@@ -173,9 +172,9 @@ function CheckoutPage() {
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      // Check file size (max 2MB before compression)
-      if (file.size > 2 * 1024 * 1024) {
-        reject(new Error("Image file is too large. Please choose an image under 2MB."));
+      // Check file size (max 1MB before compression)
+      if (file.size > 1 * 1024 * 1024) {
+        reject(new Error("Image file is too large. Please choose an image under 1MB."));
         return;
       }
 
@@ -187,8 +186,8 @@ function CheckoutPage() {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Calculate new dimensions (max 800px width/height)
-          const maxDimension = 800;
+          // Calculate new dimensions (max 500px width/height for more aggressive compression)
+          const maxDimension = 500;
           let width = img.width;
           let height = img.height;
           
@@ -207,12 +206,12 @@ function CheckoutPage() {
           
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Compress to JPEG with 0.7 quality
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          // Compress to JPEG with 0.5 quality (more aggressive)
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
           
-          // Check compressed size (max 500KB)
+          // Check compressed size (max 200KB)
           const compressedSize = (compressedDataUrl.length * 3) / 4;
-          if (compressedSize > 500 * 1024) {
+          if (compressedSize > 200 * 1024) {
             reject(new Error("Compressed image is still too large. Please try a different image."));
             return;
           }
@@ -520,26 +519,21 @@ function CheckoutPage() {
                 placeholder={String(total)}
               />
             </Field>
-            <Field label="Payment screenshot">
-              <label className="flex cursor-pointer items-center gap-3 border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
-                <Upload className="h-4 w-4" />
-                {proof ? proof.name : "Upload your transfer screenshot"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(event) => setProof(event.target.files?.[0] ?? null)}
-                />
-              </label>
-            </Field>
+            <div className="bg-muted/50 p-4 rounded text-sm text-muted-foreground">
+              <p>💡 Please send your payment screenshot to our WhatsApp after placing your order.</p>
+            </div>
           </div>
 
           <button
             type="button"
             disabled={submitting}
             onClick={() => {
-              if (!payerName.trim() || !payerAccount.trim() || !transferAmount || !proof) {
-                toast.error("Please complete every field and attach your screenshot.");
+              if (!payerName.trim() || !payerAccount.trim() || !transferAmount) {
+                toast.error("Please complete all payment details.");
+                return;
+              }
+              if (!proof) {
+                toast.error("Please attach your payment screenshot.");
                 return;
               }
               void saveOrder();
