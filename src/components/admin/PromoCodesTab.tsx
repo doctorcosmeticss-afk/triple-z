@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import Swal from "sweetalert2";
 import { Plus, Trash2, Calendar, Percent, Users, Tag } from "lucide-react";
+import { ADMIN_API_URL, getAuthHeadersOnly, getAuthHeaders } from "@/lib/admin-api";
 
 type PromoCode = {
   _id: string;
@@ -33,11 +34,8 @@ export default function PromoCodesTab() {
 
   const loadPromoCodes = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5000/api/promo-codes', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`${ADMIN_API_URL}/promo-codes`, {
+        headers: getAuthHeadersOnly()
       });
 
       const data = await response.json();
@@ -79,13 +77,9 @@ export default function PromoCodesTab() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5000/api/promo-codes', {
+      const response = await fetch(`${ADMIN_API_URL}/promo-codes`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           code: code.trim().toUpperCase(),
           percentOff: parseFloat(percentOff),
@@ -145,12 +139,9 @@ export default function PromoCodesTab() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/promo-codes/${id}`, {
+      const response = await fetch(`${ADMIN_API_URL}/promo-codes/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: getAuthHeadersOnly()
       });
 
       const data = await response.json();

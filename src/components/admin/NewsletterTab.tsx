@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import Swal from "sweetalert2";
 import { Trash2, Mail, Users, Calendar } from "lucide-react";
+import { ADMIN_API_URL, getAuthHeadersOnly } from "@/lib/admin-api";
 
 type Subscriber = {
   _id: string;
@@ -21,11 +22,8 @@ export default function NewsletterTab() {
 
   const loadSubscribers = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5000/api/newsletter', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`${ADMIN_API_URL}/newsletter`, {
+        headers: getAuthHeadersOnly()
       });
 
       const data = await response.json();
@@ -58,12 +56,9 @@ export default function NewsletterTab() {
     if (!result.isConfirmed) return;
 
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/newsletter/${subscriber._id}`, {
+      const response = await fetch(`${ADMIN_API_URL}/newsletter/${subscriber._id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: getAuthHeadersOnly()
       });
 
       const data = await response.json();

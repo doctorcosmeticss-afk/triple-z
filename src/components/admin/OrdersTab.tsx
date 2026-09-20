@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import Swal from "sweetalert2";
 import { Trash2, Calendar, User, MapPin, Phone, CreditCard, Package } from "lucide-react";
 import { format } from "date-fns";
+import { ADMIN_API_URL, getAuthHeadersOnly, getAuthHeaders } from "@/lib/admin-api";
 
 type OrderItem = {
   productId: string;
@@ -64,11 +65,8 @@ export default function OrdersTab() {
 
   const loadOrders = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5000/api/orders', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`${ADMIN_API_URL}/orders`, {
+        headers: getAuthHeadersOnly()
       });
 
       const data = await response.json();
@@ -97,12 +95,9 @@ export default function OrdersTab() {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`http://localhost:5000/api/orders/${order._id}`, {
+        const response = await fetch(`${ADMIN_API_URL}/orders/${order._id}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: getAuthHeadersOnly()
         });
 
         if (!response.ok) throw new Error('Failed to delete');
@@ -117,13 +112,9 @@ export default function OrdersTab() {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(`${ADMIN_API_URL}/orders/${orderId}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus })
       });
 

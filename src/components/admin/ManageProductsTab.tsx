@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Swal from "sweetalert2";
 import { Search, Edit, Trash2, Tag, Star, PackageX, PackageCheck } from "lucide-react";
 import EditProductDialog from "./EditProductDialog";
+import { ADMIN_API_URL, getAuthHeadersOnly, getAuthHeaders } from "@/lib/admin-api";
 
 type Product = {
   _id: string;
@@ -54,11 +55,8 @@ export default function ManageProductsTab() {
 
   const loadProducts = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5000/api/products', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetch(`${ADMIN_API_URL}/products`, {
+        headers: getAuthHeadersOnly()
       });
 
       const data = await response.json();
@@ -103,12 +101,9 @@ export default function ManageProductsTab() {
 
     if (result.isConfirmed) {
       try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+        const response = await fetch(`${ADMIN_API_URL}/products/${product._id}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: getAuthHeadersOnly()
         });
 
         if (!response.ok) throw new Error('Failed to delete');
@@ -136,13 +131,9 @@ export default function ManageProductsTab() {
 
   const handleToggleSoldOut = async (product: Product) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+      const response = await fetch(`${ADMIN_API_URL}/products/${product._id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ soldOut: !product.soldOut })
       });
 
@@ -164,13 +155,9 @@ export default function ManageProductsTab() {
         return;
       }
 
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+      const response = await fetch(`${ADMIN_API_URL}/products/${product._id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ isNewArrival: !product.isNewArrival })
       });
 
@@ -192,13 +179,9 @@ export default function ManageProductsTab() {
         return;
       }
 
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+      const response = await fetch(`${ADMIN_API_URL}/products/${product._id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ isBestSeller: !product.isBestSeller })
       });
 

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import Swal from "sweetalert2";
 import { Plus, X } from "lucide-react";
+import { ADMIN_API_URL, getAuthHeaders } from "@/lib/admin-api";
 
 type Product = {
   _id: string;
@@ -87,13 +88,9 @@ export default function EditProductDialog({
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/products/${product._id}`, {
+      const response = await fetch(`${ADMIN_API_URL}/products/${product._id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name,
           oldPrice: oldPrice ? parseFloat(oldPrice) : null,

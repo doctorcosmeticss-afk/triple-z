@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import Swal from "sweetalert2";
 import { Plus, X, Upload } from "lucide-react";
+import { ADMIN_API_URL, getAuthHeaders } from "@/lib/admin-api";
 
 const CATEGORIES = [
   "FULL SUITE",
@@ -96,13 +97,9 @@ export default function AddProductTab() {
     try {
       const slug = name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now();
       
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch(`${ADMIN_API_URL}/products`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name,
           slug,
