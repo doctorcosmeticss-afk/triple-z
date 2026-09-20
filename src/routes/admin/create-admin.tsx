@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { ADMIN_API_URL } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/admin/create-admin")({
   component: CreateAdmin,
@@ -14,7 +15,7 @@ function CreateAdmin() {
   const createTripleZAdmin = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/create-triple-z-admin', {
+      const response = await fetch(`${ADMIN_API_URL}/auth/create-triple-z-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

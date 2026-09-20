@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Mail, Bell, Check } from "lucide-react";
+import { ADMIN_API_URL } from "@/lib/admin-api";
 
 export const Route = createFileRoute("/newsletter")({
   head: () => ({
@@ -36,7 +37,7 @@ function NewsletterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/newsletter', {
+      const response = await fetch(`${ADMIN_API_URL}/newsletter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

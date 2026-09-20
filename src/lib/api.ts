@@ -1,6 +1,8 @@
 // MongoDB API client
-// Uses VITE_API_URL env var for production (Vercel), falls back to localhost for dev
-const API_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
+// - IMPORTANT: Set VITE_API_URL in Vercel Dashboard → Settings → Environment Variables
+//   Value: https://your-project.vercel.app/api
+// - Development: automatically uses localhost:5000 (no config needed)
+const API_URL: string = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
 
 export const api = {
   // Products
@@ -39,14 +41,7 @@ export const api = {
 
   // Promo Codes
   async validatePromoCode(code: string) {
-    // Vercel: POST /api/promo-codes?action=validate
-    // Localhost: POST /api/promo-codes/validate
-    const isVercel = !API_URL.includes('localhost');
-    const url = isVercel
-      ? `${API_URL}/promo-codes?action=validate`
-      : `${API_URL}/promo-codes/validate`;
-
-    const response = await fetch(url, {
+    const response = await fetch(`${API_URL}/promo-codes?action=validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
@@ -57,14 +52,7 @@ export const api = {
   },
 
   async usePromoCode(code: string) {
-    // Vercel: POST /api/promo-codes?action=use
-    // Localhost: POST /api/promo-codes/use
-    const isVercel = !API_URL.includes('localhost');
-    const url = isVercel
-      ? `${API_URL}/promo-codes?action=use`
-      : `${API_URL}/promo-codes/use`;
-
-    const response = await fetch(url, {
+    const response = await fetch(`${API_URL}/promo-codes?action=use`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code }),
