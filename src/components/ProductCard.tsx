@@ -40,7 +40,7 @@ export function ProductCard({ product, className }: { product: Product; classNam
   };
 
   const handleAddToCart = () => {
-    add(product, { color, size }, quantity);
+    add(product, { color, size, qty: quantity });
     setIsModalOpen(false);
     setQuantity(1);
   };
