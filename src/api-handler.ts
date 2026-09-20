@@ -70,6 +70,18 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       return json({ success: true, token, admin: { id: admin._id, email: admin.email } });
     }
 
+    // ─── ADMIN AUTH ─────────────────────────────────────────────────
+    if (path === "/api/admin/login" && method === "POST") {
+      const { email, password } = (await request.json()) as any;
+      if (!email || !password) return json({ error: "Email and password required" }, 400);
+      const admin = await Admin.findOne({ email: email.toLowerCase().trim() });
+      if (!admin) return json({ error: "Invalid credentials" }, 401);
+      const ok = await admin.comparePassword(password);
+      if (!ok) return json({ error: "Invalid credentials" }, 401);
+      const token = jwt.sign({ adminId: admin._id, email: admin.email }, JWT_SECRET, { expiresIn: "7d" });
+      return json({ success: true, token, admin: { id: admin._id, email: admin.email } });
+    }
+
     // ─── PRODUCTS ─────────────────────────────────────────────────
     if (path === "/api/products") {
       if (method === "GET") {
@@ -102,6 +114,43 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         const product = await Product.findByIdAndDelete(id);
         if (!product) return json({ error: "Product not found" }, 404);
         return json({ success: true, message: "Product deleted" });
+      }
+    }
+
+    // ─── ADMIN PRODUCTS ────────────────────────────────────────────
+    if (path === "/api/admin/products") {
+      if (method === "GET") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const filter: any = {};
+        const category = url.searchParams.get("category");
+        const search = url.searchParams.get("search");
+        if (category && category !== "all") filter.category = category;
+        if (search) filter.$text = { $search: search };
+        const products = await Product.find(filter).sort({ createdAt: -1 });
+        return json({ products });
+      }
+      if (method === "POST") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const data = (await request.json()) as any;
+        const product = new Product(data);
+        await product.save();
+        return json({ success: true, product }, 201);
+      }
+      if (method === "PUT") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const { id, ...data } = (await request.json()) as any;
+        if (!id) return json({ error: "Product ID is required" }, 400);
+        const product = await Product.findByIdAndUpdate(id, data, { new: true });
+        if (!product) return json({ error: "Product not found" }, 404);
+        return json({ success: true, product });
+      }
+      if (method === "DELETE") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const id = url.searchParams.get("id");
+        if (!id) return json({ error: "Product ID is required" }, 400);
+        const product = await Product.findByIdAndDelete(id);
+        if (!product) return json({ error: "Product not found" }, 404);
+        return json({ success: true, message: "Product deleted successfully" });
       }
     }
 
@@ -138,6 +187,32 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         // Fire-and-forget Telegram notification
         sendTelegram(order).catch(console.error);
         return json({ success: true, order }, 201);
+      }
+      if (method === "PUT") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const id = url.searchParams.get("id");
+        if (!id) return json({ error: "ID required" }, 400);
+        const { status } = (await request.json()) as any;
+        const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
+        if (!order) return json({ error: "Order not found" }, 404);
+        return json({ success: true, order });
+      }
+      if (method === "DELETE") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const id = url.searchParams.get("id");
+        if (!id) return json({ error: "ID required" }, 400);
+        const order = await Order.findByIdAndDelete(id);
+        if (!order) return json({ error: "Order not found" }, 404);
+        return json({ success: true, message: "Order deleted" });
+      }
+    }
+
+    // ─── ADMIN ORDERS ─────────────────────────────────────────────
+    if (path === "/api/admin/orders") {
+      if (method === "GET") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const orders = await Order.find().sort({ createdAt: -1 });
+        return json({ orders });
       }
       if (method === "PUT") {
         if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
@@ -213,6 +288,33 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
       }
     }
 
+    // ─── ADMIN PROMO CODES ─────────────────────────────────────────
+    if (path === "/api/admin/promo-codes") {
+      if (method === "GET") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const promoCodes = await PromoCode.find().sort({ createdAt: -1 });
+        return json({ promoCodes });
+      }
+      if (method === "POST") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const { code, percentOff, maxUses, validDays } = (await request.json()) as any;
+        if (!code || !percentOff || !maxUses || !validDays) return json({ error: "All fields required" }, 400);
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + validDays);
+        const promo = new PromoCode({ code: code.toUpperCase(), percentOff, maxUses, currentUses: 0, validDays, expiresAt, active: true });
+        await promo.save();
+        return json({ success: true, promoCode: promo }, 201);
+      }
+      if (method === "DELETE") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const id = url.searchParams.get("id");
+        if (!id) return json({ error: "ID required" }, 400);
+        const promo = await PromoCode.findByIdAndDelete(id);
+        if (!promo) return json({ error: "Promo code not found" }, 404);
+        return json({ success: true, message: "Promo code deleted" });
+      }
+    }
+
     // Promo code by ID
     const promoMatch = path.match(/^\/api\/promo-codes\/([^/]+)$/);
     if (promoMatch) {
@@ -231,6 +333,32 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
         const subscribers = await Newsletter.find().sort({ createdAt: -1 });
         return json({ success: true, subscribers, count: subscribers.length });
+      }
+      if (method === "POST") {
+        const { email } = (await request.json()) as any;
+        if (!email) return json({ error: "Email required" }, 400);
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Invalid email" }, 400);
+        const exists = await Newsletter.findOne({ email: email.toLowerCase().trim() });
+        if (exists) return json({ error: "Email already subscribed" }, 400);
+        await new Newsletter({ email: email.toLowerCase().trim() }).save();
+        return json({ success: true, message: "Successfully subscribed" }, 201);
+      }
+      if (method === "DELETE") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const id = url.searchParams.get("id");
+        if (!id) return json({ error: "ID required" }, 400);
+        const sub = await Newsletter.findByIdAndDelete(id);
+        if (!sub) return json({ error: "Subscriber not found" }, 404);
+        return json({ success: true, message: "Subscriber deleted" });
+      }
+    }
+
+    // ─── ADMIN NEWSLETTER ──────────────────────────────────────────
+    if (path === "/api/admin/newsletter") {
+      if (method === "GET") {
+        if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
+        const subscribers = await Newsletter.find().sort({ createdAt: -1 });
+        return json({ subscribers, count: subscribers.length });
       }
       if (method === "POST") {
         const { email } = (await request.json()) as any;

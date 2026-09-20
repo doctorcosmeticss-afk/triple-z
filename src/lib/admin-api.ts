@@ -1,6 +1,5 @@
-// Admin API client — uses TanStack Start server routes (/api/admin/*)
-// Relative URLs work on both Vercel and local dev
-export const ADMIN_API_URL = '/api/admin';
+// Admin API client — all routes go through src/api-handler.ts
+export const ADMIN_API_URL = '/api';
 
 export function getAuthHeaders() {
   const token = localStorage.getItem('adminToken');
