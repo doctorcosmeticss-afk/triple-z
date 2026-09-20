@@ -7,10 +7,8 @@ const { sendOrderNotification } = require('./telegram');
 function verifyAdmin(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return null;
-  
   const token = authHeader.split(' ')[1];
   if (!token) return null;
-  
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
@@ -18,7 +16,7 @@ function verifyAdmin(req) {
   }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   await connectDB();
 
   // Enable CORS

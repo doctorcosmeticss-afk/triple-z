@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const connectDB = require('./db');
 const { Admin } = require('./models');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   await connectDB();
 
   // Enable CORS
