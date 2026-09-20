@@ -173,8 +173,55 @@ function CheckoutPage() {
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
+      // Check file size (max 2MB before compression)
+      if (file.size > 2 * 1024 * 1024) {
+        reject(new Error("Image file is too large. Please choose an image under 2MB."));
+        return;
+      }
+
+      // Compress image
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Calculate new dimensions (max 800px width/height)
+          const maxDimension = 800;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height / width) * maxDimension;
+              width = maxDimension;
+            } else {
+              width = (width / height) * maxDimension;
+              height = maxDimension;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG with 0.7 quality
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          
+          // Check compressed size (max 500KB)
+          const compressedSize = (compressedDataUrl.length * 3) / 4;
+          if (compressedSize > 500 * 1024) {
+            reject(new Error("Compressed image is still too large. Please try a different image."));
+            return;
+          }
+          
+          resolve(compressedDataUrl);
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });

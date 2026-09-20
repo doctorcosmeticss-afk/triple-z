@@ -181,12 +181,33 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         return json({ success: true, orders });
       }
       if (method === "POST") {
-        const data = (await request.json()) as any;
-        const order = new Order(data);
-        await order.save();
-        // Fire-and-forget Telegram notification
-        sendTelegram(order).catch(console.error);
-        return json({ success: true, order }, 201);
+        try {
+          const data = (await request.json()) as any;
+          
+          // Validate required fields
+          if (!data.fullName || !data.email || !data.phone || !data.addressLine || !data.governorate) {
+            return json({ error: "Missing required fields" }, 400);
+          }
+          
+          // Remove paymentProof if it's too large (should be handled client-side, but double-check)
+          if (data.paymentProof && data.paymentProof.length > 500000) {
+            return json({ error: "Payment proof image is too large" }, 413);
+          }
+          
+          const order = new Order(data);
+          await order.save();
+          
+          // Fire-and-forget Telegram notification
+          sendTelegram(order).catch(console.error);
+          
+          return json({ success: true, order }, 201);
+        } catch (err: any) {
+          console.error("Order creation error:", err);
+          if (err.message && err.message.includes("too large")) {
+            return json({ error: "Request payload is too large" }, 413);
+          }
+          return json({ error: err.message || "Failed to create order" }, 500);
+        }
       }
       if (method === "PUT") {
         if (!verifyAdmin(request)) return json({ error: "Unauthorized" }, 401);
@@ -456,9 +477,18 @@ async function sendTelegram(order: any) {
     if (clean.trim()) msg += `\n📝 Notes: ${clean}\n`;
   }
 
-  await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' }),
-  });
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: msg, parse_mode: 'HTML' }),
+    });
+    
+    if (!response.ok) {
+      console.error('Telegram API error:', await response.text());
+    }
+  } catch (error) {
+    console.error('Telegram notification failed:', error);
+    // Don't throw - order should still succeed even if notification fails
+  }
 }
