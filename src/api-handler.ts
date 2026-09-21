@@ -190,8 +190,8 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
           }
           
           // Keep payment receipt if provided (should be compressed on client)
-          // But limit to 100KB max
-          if (data.paymentProofPath && data.paymentProofPath.length > 150000) {
+          // But limit to 200KB max (150KB target + buffer)
+          if (data.paymentProofPath && data.paymentProofPath.length > 200000) {
             return json({ error: "Payment receipt image is too large. Please use a smaller image." }, 413);
           }
           

@@ -416,12 +416,16 @@ export default function OrdersTab() {
       {/* Image Preview Dialog */}
       {selectedImage && (
         <Dialog open={true} onOpenChange={() => setSelectedImage(null)}>
-          <DialogContent className="max-w-[95vw] sm:max-w-3xl bg-white p-2 sm:p-6">
-            <div className="relative">
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl bg-white p-2 sm:p-6">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold">Payment Receipt</DialogTitle>
+            </DialogHeader>
+            <div className="relative bg-gray-50 rounded-lg p-4">
               <img 
                 src={selectedImage} 
                 alt="Payment Proof" 
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg" 
+                className="w-full h-auto max-h-[75vh] object-contain rounded-lg"
+                style={{ imageRendering: 'crisp-edges' }}
               />
               <Button
                 onClick={() => setSelectedImage(null)}
