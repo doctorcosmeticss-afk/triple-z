@@ -146,10 +146,12 @@ function CheckoutPage() {
         notes: [notes.trim(), altPhone ? `Alt phone: +20${altPhone}` : ""]
           .filter(Boolean)
           .join(" | ") || null,
-        items: lines.map(({ key, slug, tone, oldPrice, image, ...item }) => ({
+        items: lines.map(({ key, slug, tone, oldPrice, ...item }) => ({
           ...item,
-          // Keep product image URL (not base64) for order display
-          image: image && !image.startsWith('data:') ? image : '/north.png',
+          // Keep image URL but make sure it's not a data URI
+          image: item.image && typeof item.image === 'string' && !item.image.startsWith('data:') 
+            ? item.image 
+            : undefined,
         })),
         subtotal,
         shippingCost: shipping,
