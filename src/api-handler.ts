@@ -189,8 +189,13 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             return json({ error: "Missing required fields" }, 400);
           }
           
-          // Remove paymentProof entirely to avoid 413 errors - will handle separately
-          delete data.paymentProof;
+          // Validate payment proof size (should be compressed to max 200KB)
+          if (data.paymentProof) {
+            const proofSize = (data.paymentProof.length * 3) / 4; // Approximate base64 size
+            if (proofSize > 500 * 1024) { // 500KB max on server side
+              return json({ error: "Payment proof image is too large. Please compress it." }, 413);
+            }
+          }
           
           const order = new Order(data);
           await order.save();

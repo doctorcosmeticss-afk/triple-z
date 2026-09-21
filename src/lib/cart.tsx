@@ -63,13 +63,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback<CartContextValue["add"]>((product, opts) => {
     console.log('Adding to cart:', product);
-    console.log('Product images:', product.images);
     const size = opts?.size ?? product.sizes[0] ?? "M";
     const color = opts?.color ?? product.colors[0]?.name ?? "Black";
     const qty = opts?.qty ?? 1;
     const key = `${product.id}-${size}-${color}`;
     const imageUrl = product.images?.[0] ?? "/north.png";
-    console.log('Image URL:', imageUrl);
     
     setLines((prev) => {
       const existing = prev.find((line) => line.key === key);
@@ -87,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           oldPrice: product.old_price === null ? null : Number(product.old_price),
           size,
           color,
-          tone: product.images?.[0] ?? "tone-1",
+          tone: "tone-1",
           image: imageUrl,
           qty,
         },
