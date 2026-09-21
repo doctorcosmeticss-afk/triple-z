@@ -130,7 +130,7 @@ const OrderSchema: Schema = new Schema(
 );
 
 // Generate order number before saving
-OrderSchema.pre('save', async function (next) {
+OrderSchema.pre('save', function (next) {
   if (!this.orderNumber) {
     const date = new Date();
     const year = date.getFullYear();

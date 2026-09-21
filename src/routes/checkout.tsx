@@ -438,13 +438,12 @@ function CheckoutPage() {
             <span className="text-foreground">
               {method === "vodafone_cash" ? "+20 11 44044728" : "ahmed.morsy@instapay"}
             </span>
-            , then confirm the details below. <strong className="text-foreground">Please send your payment receipt to WhatsApp: +20 11 44044728</strong>
+            , then confirm your payment details below.
           </p>
 
-          <div className="bg-accent border border-border p-3 rounded text-sm">
-            <p className="font-medium">📸 Payment Receipt</p>
-            <p className="text-muted-foreground mt-1">
-              Please send your payment screenshot to WhatsApp: <strong className="text-foreground">+20 11 44044728</strong>
+          <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded text-sm mb-4">
+            <p className="text-yellow-900 dark:text-yellow-200">
+              <strong>📸 Important:</strong> Send your payment screenshot to WhatsApp <strong>+20 11 44044728</strong> after placing your order.
             </p>
           </div>
 
