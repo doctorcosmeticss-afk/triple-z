@@ -195,6 +195,16 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             return json({ error: "Payment receipt image is too large. Please use a smaller image." }, 413);
           }
           
+          // Generate order number
+          if (!data.orderNumber) {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+            data.orderNumber = `ORD-${year}${month}${day}-${random}`;
+          }
+          
           const order = new Order(data);
           await order.save();
           
