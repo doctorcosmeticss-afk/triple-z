@@ -204,12 +204,21 @@ export default function OrdersTab() {
                               <div className="flex gap-3">
                                 {/* Product Image */}
                                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-lg overflow-hidden flex-shrink-0 border border-gray-200">
-                                  {item.image ? (
-                                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                  {item.image && item.image !== 'undefined' ? (
+                                    <img 
+                                      src={item.image} 
+                                      alt={item.name} 
+                                      className="w-full h-full object-cover"
+                                      onError={(e) => {
+                                        e.currentTarget.src = '/north.png';
+                                      }}
+                                    />
                                   ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                      📦
-                                    </div>
+                                    <img 
+                                      src="/north.png" 
+                                      alt={item.name} 
+                                      className="w-full h-full object-contain p-1"
+                                    />
                                   )}
                                 </div>
                                 
@@ -416,10 +425,8 @@ export default function OrdersTab() {
       {/* Image Preview Dialog */}
       {selectedImage && (
         <Dialog open={true} onOpenChange={() => setSelectedImage(null)}>
-          <DialogContent className="max-w-[95vw] sm:max-w-4xl bg-white p-2 sm:p-6">
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold">Payment Receipt</DialogTitle>
-            </DialogHeader>
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl bg-white p-4 sm:p-6">
+            <h2 className="text-lg font-bold mb-4">Payment Receipt</h2>
             <div className="relative bg-gray-50 rounded-lg p-4">
               <img 
                 src={selectedImage} 

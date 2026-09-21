@@ -67,7 +67,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const color = opts?.color ?? product.colors[0]?.name ?? "Black";
     const qty = opts?.qty ?? 1;
     const key = `${product.id}-${size}-${color}`;
-    const imageUrl = product.images?.[0] ?? "/north.png";
+    
+    // Get product image - handle both array and string formats
+    let imageUrl = "/north.png";
+    if (product.images) {
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        imageUrl = product.images[0];
+      } else if (typeof product.images === 'string') {
+        imageUrl = product.images;
+      }
+    }
     
     setLines((prev) => {
       const existing = prev.find((line) => line.key === key);
