@@ -28,8 +28,8 @@ export const Route = createFileRoute("/checkout")({
 type PaymentMethod = "vodafone_cash" | "cash_on_delivery" | "instapay";
 
 const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; note: string }[] = [
-  { value: "vodafone_cash", label: "Vodafone Cash", note: "Transfer to 010 1234 5678, then upload your receipt." },
-  { value: "instapay", label: "InstaPay", note: "Send to triplez@instapay, then upload your receipt." },
+  { value: "vodafone_cash", label: "Vodafone Cash", note: "Transfer to +20 11 44044728, then upload your receipt." },
+  { value: "instapay", label: "InstaPay", note: "Send to ahmed.morsy@instapay, then upload your receipt." },
   { value: "cash_on_delivery", label: "Cash on Delivery", note: "Pay the courier when your order arrives." },
 ];
 
@@ -76,7 +76,6 @@ function CheckoutPage() {
   const [payerName, setPayerName] = useState("");
   const [payerAccount, setPayerAccount] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
-  const [proof, setProof] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
@@ -146,7 +145,7 @@ function CheckoutPage() {
         notes: [notes.trim(), altPhone ? `Alt phone: +20${altPhone}` : ""]
           .filter(Boolean)
           .join(" | ") || null,
-        items: lines,
+        items: lines.map((item) => item), // Keep image for order display
         subtotal,
         shippingCost: shipping,
         discount,
@@ -156,7 +155,6 @@ function CheckoutPage() {
         payerName: payerName.trim() || null,
         payerAccount: payerAccount.trim() || null,
         transferAmount: transferAmount ? Number(transferAmount) : null,
-        paymentProof: proof || null,
       };
 
       await api.createOrder(orderData);
@@ -520,36 +518,9 @@ function CheckoutPage() {
                 placeholder={String(total)}
               />
             </Field>
-            <Field label="Payment screenshot">
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      const base64 = await fileToBase64(file);
-                      setProof(base64);
-                      toast.success("Screenshot uploaded successfully.");
-                    } catch (error: any) {
-                      toast.error(error.message || "Failed to upload screenshot.");
-                    }
-                  }}
-                  className="hidden"
-                  id="payment-proof"
-                />
-                <label
-                  htmlFor="payment-proof"
-                  className="flex items-center justify-center gap-2 border border-dashed border-border bg-muted/50 p-4 text-center cursor-pointer hover:bg-muted/70 transition-colors"
-                >
-                  <Upload className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {proof ? "Screenshot attached ✓" : "Click to upload screenshot"}
-                  </span>
-                </label>
-              </div>
-            </Field>
+            <div className="bg-muted/50 p-4 rounded text-sm text-muted-foreground">
+              <p>💡 Please send your payment screenshot to our WhatsApp after placing your order.</p>
+            </div>
           </div>
 
           <button
@@ -558,10 +529,6 @@ function CheckoutPage() {
             onClick={() => {
               if (!payerName.trim() || !payerAccount.trim() || !transferAmount) {
                 toast.error("Please complete all payment details.");
-                return;
-              }
-              if (!proof) {
-                toast.error("Please attach your payment screenshot.");
                 return;
               }
               void saveOrder();
