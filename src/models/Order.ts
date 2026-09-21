@@ -39,8 +39,8 @@ const OrderSchema: Schema = new Schema(
   {
     orderNumber: {
       type: String,
-      required: true,
       unique: true,
+      sparse: true, // Allow null values but enforce uniqueness on non-null values
     },
     fullName: {
       type: String,
