@@ -189,8 +189,11 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
             return json({ error: "Missing required fields" }, 400);
           }
           
-          // Remove paymentProof to avoid 413 errors - users will send via WhatsApp
-          delete data.paymentProof;
+          // Keep payment receipt if provided (should be compressed on client)
+          // But limit to 100KB max
+          if (data.paymentProofPath && data.paymentProofPath.length > 150000) {
+            return json({ error: "Payment receipt image is too large. Please use a smaller image." }, 413);
+          }
           
           const order = new Order(data);
           await order.save();

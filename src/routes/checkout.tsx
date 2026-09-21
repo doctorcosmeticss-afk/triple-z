@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -76,6 +76,7 @@ function CheckoutPage() {
   const [payerName, setPayerName] = useState("");
   const [payerAccount, setPayerAccount] = useState("");
   const [transferAmount, setTransferAmount] = useState("");
+  const [receiptImage, setReceiptImage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
 
@@ -159,7 +160,7 @@ function CheckoutPage() {
         payerName: payerName.trim() || null,
         payerAccount: payerAccount.trim() || null,
         transferAmount: transferAmount ? Number(transferAmount) : null,
-        paymentProofPath: null, // Receipt too large - customer will send via WhatsApp +20 11 44044728
+        paymentProofPath: receiptImage || null,
       };
 
       await api.createOrder(orderData);
@@ -172,6 +173,67 @@ function CheckoutPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Compress image to max 100KB
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (file.size > 5 * 1024 * 1024) {
+        reject(new Error("Image is too large. Please choose an image under 5MB."));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Very aggressive size reduction: max 400px
+          const maxSize = 400;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height / width) * maxSize;
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width / height) * maxSize;
+              height = maxSize;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Start with quality 0.4 and reduce if needed
+          let quality = 0.4;
+          let result = canvas.toDataURL('image/jpeg', quality);
+          
+          // If still too large, reduce quality further
+          while (result.length > 100000 && quality > 0.1) {
+            quality -= 0.05;
+            result = canvas.toDataURL('image/jpeg', quality);
+          }
+          
+          if (result.length > 100000) {
+            reject(new Error("Cannot compress image enough. Please use a simpler/smaller image."));
+            return;
+          }
+          
+          resolve(result);
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
   };
 
   if (orderNumber) {
@@ -438,16 +500,57 @@ function CheckoutPage() {
             <span className="text-foreground">
               {method === "vodafone_cash" ? "+20 11 44044728" : "ahmed.morsy@instapay"}
             </span>
-            , then confirm your payment details below.
+            , then upload your payment receipt and confirm the details below.
           </p>
 
-          <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded text-sm mb-4">
-            <p className="text-yellow-900 dark:text-yellow-200">
-              <strong>📸 Important:</strong> Send your payment screenshot to WhatsApp <strong>+20 11 44044728</strong> after placing your order.
-            </p>
-          </div>
-
           <div className="space-y-4">
+            <Field label="Payment receipt (screenshot/photo)">
+              <div className="space-y-2">
+                <label className="flex cursor-pointer items-center justify-center gap-2 border-2 border-dashed border-border p-4 hover:border-primary transition-colors rounded">
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    {receiptImage ? "✅ Receipt uploaded - Click to change" : "Click to upload receipt"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      toast.loading("Compressing image...");
+                      try {
+                        const compressed = await compressImage(file);
+                        setReceiptImage(compressed);
+                        toast.dismiss();
+                        toast.success("Receipt uploaded successfully!");
+                      } catch (err: any) {
+                        toast.dismiss();
+                        toast.error(err.message || "Failed to process image");
+                      }
+                    }}
+                  />
+                </label>
+                
+                {receiptImage && (
+                  <div className="relative w-32 h-32 border border-border rounded overflow-hidden">
+                    <img 
+                      src={receiptImage} 
+                      alt="Payment receipt" 
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setReceiptImage(null)}
+                      className="absolute top-1 right-1 bg-destructive text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-destructive/90"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Field>
             <Field label="Payer name">
               <input
                 value={payerName}
@@ -483,7 +586,10 @@ function CheckoutPage() {
                 toast.error("Please complete all payment details.");
                 return;
               }
-              
+              if (!receiptImage) {
+                toast.error("Please upload your payment receipt.");
+                return;
+              }
               void saveOrder();
             }}
             className="mt-2 flex w-full items-center justify-center gap-2 bg-primary py-4 text-[0.65rem] tracking-brand text-primary-foreground uppercase disabled:opacity-50"
