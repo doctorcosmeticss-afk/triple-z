@@ -146,10 +146,10 @@ function CheckoutPage() {
         notes: [notes.trim(), altPhone ? `Alt phone: +20${altPhone}` : ""]
           .filter(Boolean)
           .join(" | ") || null,
-        items: lines.map(({ key, slug, tone, oldPrice, ...item }) => ({
+        items: lines.map(({ key, slug, tone, oldPrice, image, ...item }) => ({
           ...item,
-          // NEVER send product images (they are huge!) - only send product ID & details
-          image: undefined,
+          // Keep product image URL (not base64) for order display
+          image: image && !image.startsWith('data:') ? image : '/north.png',
         })),
         subtotal,
         shippingCost: shipping,
@@ -175,7 +175,7 @@ function CheckoutPage() {
     }
   };
 
-  // Compress image to max 100KB
+  // Compress image to max 150KB with better quality
   const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       if (file.size > 5 * 1024 * 1024) {
@@ -190,8 +190,8 @@ function CheckoutPage() {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Very aggressive size reduction: max 400px
-          const maxSize = 400;
+          // Better size: max 800px (better quality than 400px)
+          const maxSize = 800;
           let width = img.width;
           let height = img.height;
           
@@ -211,17 +211,20 @@ function CheckoutPage() {
           canvas.height = height;
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Start with quality 0.4 and reduce if needed
-          let quality = 0.4;
+          // Start with quality 0.7 (better quality)
+          let quality = 0.7;
           let result = canvas.toDataURL('image/jpeg', quality);
           
-          // If still too large, reduce quality further
-          while (result.length > 100000 && quality > 0.1) {
+          // Target 150KB instead of 100KB
+          const maxBytes = 150000;
+          
+          // If still too large, reduce quality
+          while (result.length > maxBytes && quality > 0.3) {
             quality -= 0.05;
             result = canvas.toDataURL('image/jpeg', quality);
           }
           
-          if (result.length > 100000) {
+          if (result.length > maxBytes) {
             reject(new Error("Cannot compress image enough. Please use a simpler/smaller image."));
             return;
           }
