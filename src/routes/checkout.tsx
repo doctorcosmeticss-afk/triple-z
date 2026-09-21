@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { Check, Loader2, Upload } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -145,7 +145,11 @@ function CheckoutPage() {
         notes: [notes.trim(), altPhone ? `Alt phone: +20${altPhone}` : ""]
           .filter(Boolean)
           .join(" | ") || null,
-        items: lines.map((item) => item), // Keep image for order display
+        items: lines.map(({ key, slug, tone, oldPrice, ...item }) => ({
+          ...item,
+          // NEVER send product images (they are huge!) - only send product ID & details
+          image: undefined,
+        })),
         subtotal,
         shippingCost: shipping,
         discount,
@@ -155,6 +159,7 @@ function CheckoutPage() {
         payerName: payerName.trim() || null,
         payerAccount: payerAccount.trim() || null,
         transferAmount: transferAmount ? Number(transferAmount) : null,
+        paymentProofPath: null, // Receipt too large - customer will send via WhatsApp +20 11 44044728
       };
 
       await api.createOrder(orderData);
@@ -167,62 +172,6 @@ function CheckoutPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      // Check file size (max 1MB before compression)
-      if (file.size > 1 * 1024 * 1024) {
-        reject(new Error("Image file is too large. Please choose an image under 1MB."));
-        return;
-      }
-
-      // Compress image
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          
-          // Calculate new dimensions (max 500px width/height for more aggressive compression)
-          const maxDimension = 500;
-          let width = img.width;
-          let height = img.height;
-          
-          if (width > maxDimension || height > maxDimension) {
-            if (width > height) {
-              height = (height / width) * maxDimension;
-              width = maxDimension;
-            } else {
-              width = (width / height) * maxDimension;
-              height = maxDimension;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Compress to JPEG with 0.5 quality (more aggressive)
-          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
-          
-          // Check compressed size (max 200KB)
-          const compressedSize = (compressedDataUrl.length * 3) / 4;
-          if (compressedSize > 200 * 1024) {
-            reject(new Error("Compressed image is still too large. Please try a different image."));
-            return;
-          }
-          
-          resolve(compressedDataUrl);
-        };
-        img.onerror = reject;
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   };
 
   if (orderNumber) {
@@ -489,8 +438,15 @@ function CheckoutPage() {
             <span className="text-foreground">
               {method === "vodafone_cash" ? "+20 11 44044728" : "ahmed.morsy@instapay"}
             </span>
-            , then confirm the details below.
+            , then confirm the details below. <strong className="text-foreground">Please send your payment receipt to WhatsApp: +20 11 44044728</strong>
           </p>
+
+          <div className="bg-accent border border-border p-3 rounded text-sm">
+            <p className="font-medium">📸 Payment Receipt</p>
+            <p className="text-muted-foreground mt-1">
+              Please send your payment screenshot to WhatsApp: <strong className="text-foreground">+20 11 44044728</strong>
+            </p>
+          </div>
 
           <div className="space-y-4">
             <Field label="Payer name">
@@ -518,9 +474,6 @@ function CheckoutPage() {
                 placeholder={String(total)}
               />
             </Field>
-            <div className="bg-muted/50 p-4 rounded text-sm text-muted-foreground">
-              <p>💡 Please send your payment screenshot to our WhatsApp after placing your order.</p>
-            </div>
           </div>
 
           <button
@@ -531,6 +484,7 @@ function CheckoutPage() {
                 toast.error("Please complete all payment details.");
                 return;
               }
+              
               void saveOrder();
             }}
             className="mt-2 flex w-full items-center justify-center gap-2 bg-primary py-4 text-[0.65rem] tracking-brand text-primary-foreground uppercase disabled:opacity-50"
